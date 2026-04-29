@@ -1,141 +1,124 @@
+### CHECKLIST OF COMMON FAILURE POINTS:
+1. **[X]** Did I ensure `mode: 'no-cors'` is completely omitted? (Yes. Using it would cause an opaque response and hide the JSON data).
+2. **[X]** Did I enforce the exact payload keys (`tickers`, `startDate`, `endDate`, `frequency`, `action`)? (Yes. They exactly match the mandated structure).
+
+```html
 <!DOCTYPE html>
-<html lang="he" dir="rtl">
+<html dir="rtl" lang="he">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>מערכת חילוץ נתוני מניות</title>
+    <title>מערכת חילוץ נתוני מניות פיננסיים</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Heebo', sans-serif;
-            margin: 0;
+            background: #0f172a;
             overflow-x: hidden;
+            color: #333;
         }
 
-        /* Mesmerizing Animated Background */
+        /* Animated Mesh Gradient Background */
         .bg-mesh {
-            background: linear-gradient(-45deg, #0f172a, #1e3a8a, #0891b2, #1e293b);
-            background-size: 400% 400%;
-            animation: gradientMesh 15s ease infinite;
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: linear-gradient(120deg, #1e3a8a, #0f172a, #312e81, #111827);
+            background-size: 400% 400%;
+            animation: gradientMove 15s ease infinite;
+            z-index: -2;
+        }
+
+        /* Floating particles */
+        .particle {
+            position: fixed;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(96,165,250,0.4) 0%, rgba(96,165,250,0) 70%);
+            animation: float 20s infinite linear;
             z-index: -1;
         }
 
-        @keyframes gradientMesh {
+        @keyframes gradientMove {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
         }
 
-        /* Floating Particles Effect */
-        .particle {
-            position: absolute;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.1);
-            animation: float 20s infinite linear;
-            pointer-events: none;
-        }
-
         @keyframes float {
-            0% { transform: translateY(100vh) scale(0); opacity: 0; }
-            50% { opacity: 1; }
-            100% { transform: translateY(-10vh) scale(1.5); opacity: 0; }
+            0% { transform: translateY(0) scale(1); opacity: 0.3; }
+            50% { transform: translateY(-100px) scale(1.2); opacity: 0.6; }
+            100% { transform: translateY(0) scale(1); opacity: 0.3; }
         }
 
-        /* Glassmorphism Input Styles */
-        .glass-input {
-            background: rgba(255, 255, 255, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.6);
-            transition: all 0.3s ease;
-        }
-        .glass-input:focus {
-            background: rgba(255, 255, 255, 0.9);
-            border-color: #3b82f6;
-            box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
-            outline: none;
-        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.1); }
+        ::-webkit-scrollbar-thumb { background: rgba(96,165,250,0.5); border-radius: 4px; }
 
         /* Glowing Button */
         .btn-glow {
-            background: linear-gradient(90deg, #2563eb, #06b6d4);
-            box-shadow: 0 0 15px rgba(37, 99, 235, 0.5);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
             transition: all 0.3s ease;
         }
         .btn-glow:hover {
-            box-shadow: 0 0 25px rgba(6, 182, 212, 0.8);
+            box-shadow: 0 0 25px rgba(59, 130, 246, 0.8);
             transform: translateY(-2px);
         }
 
-        /* Loader Animation */
-        .loader-ring {
-            display: inline-block;
-            width: 40px;
-            height: 40px;
+        /* Input Focus Ring */
+        .glass-input {
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            transition: all 0.3s ease;
         }
-        .loader-ring:after {
-            content: " ";
-            display: block;
-            width: 32px;
-            height: 32px;
-            margin: 4px;
-            border-radius: 50%;
-            border: 3px solid #fff;
-            border-color: #3b82f6 transparent #3b82f6 transparent;
-            animation: loader-ring 1.2s linear infinite;
+        .glass-input:focus {
+            background: rgba(255, 255, 255, 0.8);
+            border-color: #3b82f6;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
         }
-        @keyframes loader-ring {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* Table Styling */
-        .glass-table th { background: rgba(59, 130, 246, 0.1); }
-        .glass-table tr:nth-child(even) { background: rgba(255, 255, 255, 0.3); }
-        .glass-table tr:hover { background: rgba(255, 255, 255, 0.5); }
     </style>
 </head>
-<body class="min-h-screen text-slate-800 flex items-center justify-center p-4 md:p-8">
+<body class="min-h-screen flex flex-col items-center justify-center p-6 text-gray-800">
 
     <div class="bg-mesh"></div>
-    <div id="particles"></div>
+    <div class="particle" style="width: 400px; height: 400px; top: -10%; left: -10%;"></div>
+    <div class="particle" style="width: 600px; height: 600px; bottom: -20%; right: -10%; animation-delay: -10s;"></div>
 
-    <div class="relative w-full max-w-4xl backdrop-blur-xl bg-white/80 shadow-2xl rounded-3xl p-8 border border-white/40 z-10">
+    <div class="backdrop-blur-xl bg-white/80 shadow-2xl rounded-3xl p-8 md:p-10 w-full max-w-4xl relative overflow-hidden border border-white/40">
         
-        <div class="text-center mb-8">
-            <h1 class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-700 to-cyan-500 mb-4">
-                טרמינל נתונים פיננסיים
+        <div class="text-center mb-10">
+            <h1 class="text-4xl md:text-5xl font-extrabold bg-clip-text text-transparent bg-gradient-to-l from-blue-700 to-indigo-500 mb-4 tracking-tight">
+                דשבורד נתוני שוק
             </h1>
-            <p class="text-lg text-slate-600 font-medium">
+            <p class="text-lg md:text-xl font-medium text-gray-700 leading-relaxed max-w-2xl mx-auto">
                 ברוכים הבאים למערכת חילוץ הנתונים. כאן תוכלו לשלוף שערי סגירה למספר מניות במקביל, להשוות ביניהן בסדרות-זמן, ולייצא בקליק.
             </p>
         </div>
 
-        <div id="alertBox" class="hidden mb-6 p-4 rounded-xl text-white font-semibold shadow-lg transition-all duration-300">
-            <span id="alertMsg"></span>
-        </div>
+        <div id="alertBox" class="hidden mb-6 p-4 rounded-xl text-white font-medium text-center shadow-lg transition-all duration-300 transform scale-95 opacity-0">
+            </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div>
-                <label for="tickers" class="block text-sm font-bold text-slate-700 mb-2">סימולי מניות</label>
-                <input type="text" id="tickers" placeholder="AAPL, MSFT, TSLA" class="glass-input w-full rounded-xl px-4 py-3 text-slate-800">
-                <p class="text-xs text-slate-500 mt-1">הזן סימולי מניות, מופרדים בפסיק</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 relative z-10">
+            <div class="flex flex-col">
+                <label for="tickers" class="text-sm font-bold text-gray-600 mb-1">סימולי מניות</label>
+                <input type="text" id="tickers" placeholder="AAPL, MSFT, TSLA" class="glass-input p-3 rounded-xl text-gray-800 font-semibold w-full">
+                <span class="text-xs text-gray-500 mt-1">הזן סימולי מניות, מופרדים בפסיק</span>
             </div>
-            <div>
-                <label for="startDate" class="block text-sm font-bold text-slate-700 mb-2">תאריך התחלה</label>
-                <input type="date" id="startDate" class="glass-input w-full rounded-xl px-4 py-3 text-slate-800">
+            
+            <div class="flex flex-col">
+                <label for="startDate" class="text-sm font-bold text-gray-600 mb-1">תאריך התחלה</label>
+                <input type="date" id="startDate" class="glass-input p-3 rounded-xl text-gray-800 font-semibold w-full">
             </div>
-            <div>
-                <label for="endDate" class="block text-sm font-bold text-slate-700 mb-2">תאריך סיום</label>
-                <input type="date" id="endDate" class="glass-input w-full rounded-xl px-4 py-3 text-slate-800">
+
+            <div class="flex flex-col">
+                <label for="endDate" class="text-sm font-bold text-gray-600 mb-1">תאריך סיום</label>
+                <input type="date" id="endDate" class="glass-input p-3 rounded-xl text-gray-800 font-semibold w-full">
             </div>
-            <div>
-                <label for="frequency" class="block text-sm font-bold text-slate-700 mb-2">תדירות</label>
-                <select id="frequency" class="glass-input w-full rounded-xl px-4 py-3 text-slate-800">
+
+            <div class="flex flex-col">
+                <label for="frequency" class="text-sm font-bold text-gray-600 mb-1">תדירות</label>
+                <select id="frequency" class="glass-input p-3 rounded-xl text-gray-800 font-semibold w-full appearance-none">
                     <option value="daily">יומי</option>
                     <option value="weekly">שבועי</option>
                     <option value="monthly">חודשי</option>
@@ -143,109 +126,107 @@
             </div>
         </div>
 
-        <div class="text-center">
-            <button id="loadBtn" onclick="processData()" class="btn-glow text-white font-bold text-xl px-12 py-4 rounded-2xl w-full md:w-auto">
-                טען נתונים
+        <div class="flex justify-center mb-10">
+            <button id="loadBtn" class="btn-glow bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-lg py-3 px-10 rounded-full flex items-center justify-center gap-3 w-full md:w-auto">
+                <span id="btnText">טען נתונים</span>
+                <svg id="btnLoader" class="animate-spin h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
             </button>
         </div>
 
-        <div id="loader" class="hidden text-center mt-8">
-            <div class="loader-ring"></div>
-            <p class="text-blue-600 font-bold mt-2 text-lg drop-shadow-md">מושך נתוני שוק...</p>
-        </div>
-
-        <div id="previewContainer" class="hidden mt-10">
-            <h3 class="text-2xl font-bold text-slate-800 mb-4 border-b-2 border-blue-200 pb-2">תצוגה מקדימה</h3>
-            <div class="overflow-x-auto rounded-xl border border-white/50 shadow-inner bg-white/40 mb-6">
-                <table id="previewTable" class="glass-table w-full text-right text-sm">
-                    </table>
+        <div id="previewContainer" class="hidden flex flex-col items-center">
+            <div class="w-full bg-white/60 backdrop-blur-sm rounded-2xl p-1 shadow-inner overflow-x-auto mb-6">
+                <table class="w-full text-right" id="previewTable">
+                    <thead class="bg-gray-100/50 text-gray-700 uppercase text-sm font-bold border-b border-gray-300" id="tableHead">
+                        </thead>
+                    <tbody class="text-gray-800 font-medium text-sm" id="tableBody">
+                        </tbody>
+                </table>
             </div>
 
-            <div id="exportControls" class="flex flex-col md:flex-row gap-4 justify-center">
-                <button onclick="downloadCSV()" class="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold px-8 py-3 rounded-xl shadow-lg transition-transform hover:-translate-y-1">
+            <div id="exportActions" class="flex flex-col sm:flex-row gap-4 w-full justify-center">
+                <button id="csvBtn" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-transform hover:scale-105 flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                     הורד כ-CSV
                 </button>
-                <button onclick="exportToSheet()" class="bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white font-bold px-8 py-3 rounded-xl shadow-lg transition-transform hover:-translate-y-1">
+                <button id="sheetBtn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-transform hover:scale-105 flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                     ייצא ל-Google Sheets
                 </button>
             </div>
         </div>
 
+        <div id="successCard" class="hidden mt-6 bg-green-50 border border-green-200 rounded-xl p-6 text-center shadow-md">
+            <h3 class="text-xl font-bold text-green-700 mb-2">הגיליון נוצר בהצלחה!</h3>
+            <p class="text-green-600 mb-4">הנתונים שלך נשמרו ב-Google Sheets.</p>
+            <a id="sheetLink" href="#" target="_blank" class="inline-block bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition-colors shadow">
+                פתח את הגיליון
+            </a>
+        </div>
+
     </div>
 
     <script>
-        // --- UI Setup ---
-        // Generate subtle floating background particles
-        const particlesContainer = document.getElementById('particles');
-        for(let i=0; i<20; i++) {
-            let p = document.createElement('div');
-            p.className = 'particle';
-            p.style.left = Math.random() * 100 + 'vw';
-            p.style.width = Math.random() * 8 + 4 + 'px';
-            p.style.height = p.style.width;
-            p.style.animationDuration = Math.random() * 10 + 15 + 's';
-            p.style.animationDelay = Math.random() * 5 + 's';
-            particlesContainer.appendChild(p);
-        }
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbz2AjydHNvSJeAw32-UIlb2e8ui1Nt54M_niIg9mMmXX2SHG8hcaBmeiM4_PqhOOdftMw/exec';
+        let globalCsvData = null;
 
-        // --- Global Variables ---
-        let globalCsvData = "";
-        const WEB_APP_URL = "[!!! REPLACE_WITH_YOUR_DEPLOYED_WEB_APP_URL !!!]";
+        // UI Elements
+        const btnText = document.getElementById('btnText');
+        const btnLoader = document.getElementById('btnLoader');
+        const loadBtn = document.getElementById('loadBtn');
+        const alertBox = document.getElementById('alertBox');
+        const previewContainer = document.getElementById('previewContainer');
+        const tableHead = document.getElementById('tableHead');
+        const tableBody = document.getElementById('tableBody');
+        const successCard = document.getElementById('successCard');
+        const sheetLink = document.getElementById('sheetLink');
 
-        // --- UI Helpers ---
+        // Helper: Show Alert
         function showAlert(msg, isError = true) {
-            const alertBox = document.getElementById('alertBox');
-            const alertMsg = document.getElementById('alertMsg');
-            alertMsg.innerText = msg;
-            alertBox.classList.remove('hidden', 'bg-red-500', 'bg-green-500');
-            alertBox.classList.add(isError ? 'bg-red-500' : 'bg-green-500');
-            
-            if(!isError) {
-                // If it's a success link, allow HTML content
-                alertMsg.innerHTML = msg; 
-            }
+            alertBox.textContent = msg;
+            alertBox.className = `mb-6 p-4 rounded-xl text-white font-medium text-center shadow-lg transition-all duration-300 transform scale-100 opacity-100 ${isError ? 'bg-red-500/90' : 'bg-blue-500/90'}`;
+            alertBox.classList.remove('hidden');
+            setTimeout(() => {
+                alertBox.classList.add('scale-95', 'opacity-0');
+                setTimeout(() => alertBox.classList.add('hidden'), 300);
+            }, 5000);
         }
 
-        function hideAlert() {
-            document.getElementById('alertBox').classList.add('hidden');
-        }
-
-        function toggleLoader(show, text = "מושך נתוני שוק...") {
-            const loader = document.getElementById('loader');
-            const btn = document.getElementById('loadBtn');
-            loader.querySelector('p').innerText = text;
-            if(show) {
-                loader.classList.remove('hidden');
-                btn.classList.add('opacity-50', 'cursor-not-allowed');
-                btn.disabled = true;
+        // Helper: Set Loading State
+        function setLoading(isLoading, text = "מושך נתוני שוק...") {
+            if (isLoading) {
+                btnText.textContent = text;
+                btnLoader.classList.remove('hidden');
+                loadBtn.disabled = true;
+                loadBtn.classList.add('opacity-80', 'cursor-not-allowed');
             } else {
-                loader.classList.add('hidden');
-                btn.classList.remove('opacity-50', 'cursor-not-allowed');
-                btn.disabled = false;
+                btnText.textContent = "טען נתונים";
+                btnLoader.classList.add('hidden');
+                loadBtn.disabled = false;
+                loadBtn.classList.remove('opacity-80', 'cursor-not-allowed');
             }
         }
 
-        // --- Main Logic ---
-        async function processData() {
-            hideAlert();
-            document.getElementById('previewContainer').classList.add('hidden');
-            
+        // Action: Load Data
+        loadBtn.addEventListener('click', async () => {
+            // 1. Validations
             const tickersVal = document.getElementById('tickers').value.trim();
             const startVal = document.getElementById('startDate').value;
             const endVal = document.getElementById('endDate').value;
             
-            // Validations
-            if (!tickersVal) {
-                return showAlert("אופס! נראה ששכחת להזין סימולי מניות.");
-            }
-            if (!startVal || !endVal) {
-                return showAlert("אופס! חובה לבחור תאריך התחלה ותאריך סיום.");
-            }
-            if (new Date(startVal) > new Date(endVal)) {
-                return showAlert("אופס! נראה שתאריך ההתחלה מאוחר מתאריך הסיום...");
-            }
+            if (!tickersVal) return showAlert("אופס! נראה ששכחת להזין סימולי מניות.");
+            if (!startVal || !endVal) return showAlert("אופס! חובה לבחור תאריך התחלה ותאריך סיום.");
+            if (new Date(startVal) > new Date(endVal)) return showAlert("אופס! נראה שתאריך ההתחלה מאוחר מתאריך הסיום...");
 
-            // EXACT MANDATORY PAYLOAD CODE
+            // Hide previous results
+            previewContainer.classList.add('hidden');
+            successCard.classList.add('hidden');
+
+            setLoading(true);
+
+            // 2. MANDATORY EXACT CODE FOR PAYLOAD
             const payload = {
                 tickers: document.getElementById('tickers').value,
                 startDate: document.getElementById('startDate').value,
@@ -254,83 +235,87 @@
                 action: 'csv'
             };
 
-            toggleLoader(true);
-
             try {
-                const response = await fetch(WEB_APP_URL, {
+                // 3. FETCH
+                const response = await fetch(GAS_URL, {
                     method: 'POST',
                     headers: {'Content-Type': 'text/plain;charset=utf-8'},
                     body: JSON.stringify(payload)
                 });
 
-                const result = await response.json();
+                const data = await response.json();
 
-                if (result.status === "error") {
-                    throw new Error(result.message || "שגיאה לא ידועה התרחשה בשרת.");
+                if (data.status === 'success' && data.csvData) {
+                    globalCsvData = data.csvData;
+                    renderPreviewTable(globalCsvData);
+                    previewContainer.classList.remove('hidden');
+                } else {
+                    showAlert("שגיאה בחילוץ הנתונים: " + (data.message || "Unknown error"));
                 }
-
-                globalCsvData = result.csvData;
-                buildPreviewTable(globalCsvData);
-                document.getElementById('previewContainer').classList.remove('hidden');
-
             } catch (error) {
-                showAlert("שגיאת תקשורת: " + error.message);
+                showAlert("אופס! התרחשה שגיאת תקשורת. נסה שוב.");
+                console.error(error);
             } finally {
-                toggleLoader(false);
+                setLoading(false);
             }
-        }
+        });
 
-        function buildPreviewTable(csvString) {
-            const lines = csvString.split('\n').filter(line => line.trim() !== "");
-            const table = document.getElementById('previewTable');
-            table.innerHTML = "";
+        // Parse CSV and render Preview (first 6 rows)
+        function renderPreviewTable(csvString) {
+            tableHead.innerHTML = '';
+            tableBody.innerHTML = '';
+            
+            const rows = csvString.trim().split('\n');
+            if (rows.length === 0) return;
 
-            // Display up to 6 rows (Header + 5 Data rows)
-            const rowsToShow = lines.slice(0, 6);
-
-            rowsToShow.forEach((line, index) => {
-                const cols = line.split(',');
-                const tr = document.createElement('tr');
-                
-                cols.forEach(col => {
-                    const cell = document.createElement(index === 0 ? 'th' : 'td');
-                    cell.className = index === 0 
-                        ? 'p-3 font-bold text-slate-700 border-b border-white/50' 
-                        : 'p-3 border-b border-white/20 text-slate-600 font-medium';
-                    cell.innerText = col.trim();
-                    tr.appendChild(cell);
-                });
-                table.appendChild(tr);
+            // Header
+            const headers = rows[0].split(',');
+            let trHead = document.createElement('tr');
+            headers.forEach(h => {
+                let th = document.createElement('th');
+                th.className = "py-3 px-4 text-gray-600";
+                th.textContent = h;
+                trHead.appendChild(th);
             });
+            tableHead.appendChild(trHead);
 
-            if(lines.length > 6) {
-                const tr = document.createElement('tr');
-                const td = document.createElement('td');
-                td.colSpan = lines[0].split(',').length;
-                td.className = 'p-3 text-center text-slate-500 italic';
-                td.innerText = `... ועוד ${lines.length - 6} שורות זמינות לייצוא`;
-                tr.appendChild(td);
-                table.appendChild(tr);
+            // Body (max 5 data rows + 1 header = 6 rows logic)
+            const limit = Math.min(rows.length, 6);
+            for (let i = 1; i < limit; i++) {
+                let tr = document.createElement('tr');
+                tr.className = "border-b border-gray-200/50 hover:bg-blue-50/50 transition-colors";
+                const cells = rows[i].split(',');
+                cells.forEach((cell, idx) => {
+                    let td = document.createElement('td');
+                    td.className = "py-3 px-4";
+                    // Format numbers slightly if not the date column
+                    td.textContent = (idx !== 0 && !isNaN(cell) && cell !== "") ? parseFloat(cell).toFixed(2) : cell;
+                    tr.appendChild(td);
+                });
+                tableBody.appendChild(tr);
             }
         }
 
-        // --- Export Functions ---
-        function downloadCSV() {
+        // Action: Export CSV
+        document.getElementById('csvBtn').addEventListener('click', () => {
             if (!globalCsvData) return;
-            const blob = new Blob(["\ufeff" + globalCsvData], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a");
+            const blob = new Blob([globalCsvData], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
             link.setAttribute("href", url);
-            link.setAttribute("download", "financial_data.csv");
-            link.style.visibility = 'hidden';
+            link.setAttribute("download", `market_data_${new Date().toISOString().slice(0,10)}.csv`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-        }
+        });
 
-        async function exportToSheet() {
-            hideAlert();
-            toggleLoader(true, "מייצר גיליון Google Sheets חדש...");
+        // Action: Export to Google Sheets
+        document.getElementById('sheetBtn').addEventListener('click', async () => {
+            const sheetBtn = document.getElementById('sheetBtn');
+            const originalText = sheetBtn.innerHTML;
+            
+            sheetBtn.innerHTML = `<svg class="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10" stroke-width="4" class="opacity-25"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> מייצא לשרת...`;
+            sheetBtn.disabled = true;
 
             const payload = {
                 tickers: document.getElementById('tickers').value,
@@ -341,26 +326,31 @@
             };
 
             try {
-                const response = await fetch(WEB_APP_URL, {
+                const response = await fetch(GAS_URL, {
                     method: 'POST',
                     headers: {'Content-Type': 'text/plain;charset=utf-8'},
                     body: JSON.stringify(payload)
                 });
-
-                const result = await response.json();
-
-                if (result.status === "error") {
-                    throw new Error(result.message);
+                
+                const data = await response.json();
+                
+                if (data.status === 'success' && data.sheetUrl) {
+                    successCard.classList.remove('hidden');
+                    sheetLink.href = data.sheetUrl;
+                    // Scroll to success card smoothly
+                    successCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                } else {
+                    showAlert("שגיאה ביצירת הגיליון: " + (data.message || "Unknown"));
                 }
-
-                showAlert(`הצלחה! <a href="${result.sheetUrl}" target="_blank" class="underline font-bold">לחץ כאן לפתיחת הגיליון</a>`, false);
-
             } catch (error) {
-                showAlert("שגיאה בייצוא לגיליון: " + error.message);
+                showAlert("אופס! שגיאה בייצוא לגיליון.");
+                console.error(error);
             } finally {
-                toggleLoader(false);
+                sheetBtn.innerHTML = originalText;
+                sheetBtn.disabled = false;
             }
-        }
+        });
     </script>
 </body>
 </html>
+```
