@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מערכת חילוץ נתוני מניות</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Heebo', sans-serif;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        /* Mesmerizing Animated Background */
+        .bg-mesh {
+            background: linear-gradient(-45deg, #0f172a, #1e3a8a, #0891b2, #1e293b);
+            background-size: 400% 400%;
+            animation: gradientMesh 15s ease infinite;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+        }
+
+        @keyframes gradientMesh {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Floating Particles Effect */
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            animation: float 20s infinite linear;
+            pointer-events: none;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(100vh) scale(0); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translateY(-10vh) scale(1.5); opacity: 0; }
+        }
+
+        /* Glassmorphism Input Styles */
+        .glass-input {
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            transition: all 0.3s ease;
+        }
+        .glass-input:focus {
+            background: rgba(255, 255, 255, 0.9);
+            border-color: #3b82f6;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+            outline: none;
+        }
+
+        /* Glowing Button */
+        .btn-glow {
+            background: linear-gradient(90deg, #2563eb, #06b6d4);
+            box-shadow: 0 0 15px rgba(37, 99, 235, 0.5);
+            transition: all 0.3s ease;
+        }
+        .btn-glow:hover {
+            box-shadow: 0 0 25px rgba(6, 182, 212, 0.8);
+            transform: translateY(-2px);
+        }
+
+        /* Loader Animation */
+        .loader-ring {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+        }
+        .loader-ring:after {
+            content: " ";
+            display: block;
+            width: 32px;
+            height: 32px;
+            margin: 4px;
+            border-radius: 50%;
+            border: 3px solid #fff;
+            border-color: #3b82f6 transparent #3b82f6 transparent;
+            animation: loader-ring 1.2s linear infinite;
+        }
+        @keyframes loader-ring {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Table Styling */
+        .glass-table th { background: rgba(59, 130, 246, 0.1); }
+        .glass-table tr:nth-child(even) { background: rgba(255, 255, 255, 0.3); }
+        .glass-table tr:hover { background: rgba(255, 255, 255, 0.5); }
+    </style>
+</head>
+<body class="min-h-screen text-slate-800 flex items-center justify-center p-4 md:p-8">
+
+    <div class="bg-mesh"></div>
+    <div id="particles"></div>
+
+    <div class="relative w-full max-w-4xl backdrop-blur-xl bg-white/80 shadow-2xl rounded-3xl p-8 border border-white/40 z-10">
+        
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-700 to-cyan-500 mb-4">
+                טרמינל נתונים פיננסיים
+            </h1>
+            <p class="text-lg text-slate-600 font-medium">
+                ברוכים הבאים למערכת חילוץ הנתונים. כאן תוכלו לשלוף שערי סגירה למספר מניות במקביל, להשוות ביניהן בסדרות-זמן, ולייצא בקליק.
+            </p>
+        </div>
+
+        <div id="alertBox" class="hidden mb-6 p-4 rounded-xl text-white font-semibold shadow-lg transition-all duration-300">
+            <span id="alertMsg"></span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div>
+                <label for="tickers" class="block text-sm font-bold text-slate-700 mb-2">סימולי מניות</label>
+                <input type="text" id="tickers" placeholder="AAPL, MSFT, TSLA" class="glass-input w-full rounded-xl px-4 py-3 text-slate-800">
+                <p class="text-xs text-slate-500 mt-1">הזן סימולי מניות, מופרדים בפסיק</p>
+            </div>
+            <div>
+                <label for="startDate" class="block text-sm font-bold text-slate-700 mb-2">תאריך התחלה</label>
+                <input type="date" id="startDate" class="glass-input w-full rounded-xl px-4 py-3 text-slate-800">
+            </div>
+            <div>
+                <label for="endDate" class="block text-sm font-bold text-slate-700 mb-2">תאריך סיום</label>
+                <input type="date" id="endDate" class="glass-input w-full rounded-xl px-4 py-3 text-slate-800">
+            </div>
+            <div>
+                <label for="frequency" class="block text-sm font-bold text-slate-700 mb-2">תדירות</label>
+                <select id="frequency" class="glass-input w-full rounded-xl px-4 py-3 text-slate-800">
+                    <option value="daily">יומי</option>
+                    <option value="weekly">שבועי</option>
+                    <option value="monthly">חודשי</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="text-center">
+            <button id="loadBtn" onclick="processData()" class="btn-glow text-white font-bold text-xl px-12 py-4 rounded-2xl w-full md:w-auto">
+                טען נתונים
+            </button>
+        </div>
+
+        <div id="loader" class="hidden text-center mt-8">
+            <div class="loader-ring"></div>
+            <p class="text-blue-600 font-bold mt-2 text-lg drop-shadow-md">מושך נתוני שוק...</p>
+        </div>
+
+        <div id="previewContainer" class="hidden mt-10">
+            <h3 class="text-2xl font-bold text-slate-800 mb-4 border-b-2 border-blue-200 pb-2">תצוגה מקדימה</h3>
+            <div class="overflow-x-auto rounded-xl border border-white/50 shadow-inner bg-white/40 mb-6">
+                <table id="previewTable" class="glass-table w-full text-right text-sm">
+                    </table>
+            </div>
+
+            <div id="exportControls" class="flex flex-col md:flex-row gap-4 justify-center">
+                <button onclick="downloadCSV()" class="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold px-8 py-3 rounded-xl shadow-lg transition-transform hover:-translate-y-1">
+                    הורד כ-CSV
+                </button>
+                <button onclick="exportToSheet()" class="bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white font-bold px-8 py-3 rounded-xl shadow-lg transition-transform hover:-translate-y-1">
+                    ייצא ל-Google Sheets
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- UI Setup ---
+        // Generate subtle floating background particles
+        const particlesContainer = document.getElementById('particles');
+        for(let i=0; i<20; i++) {
+            let p = document.createElement('div');
+            p.className = 'particle';
+            p.style.left = Math.random() * 100 + 'vw';
+            p.style.width = Math.random() * 8 + 4 + 'px';
+            p.style.height = p.style.width;
+            p.style.animationDuration = Math.random() * 10 + 15 + 's';
+            p.style.animationDelay = Math.random() * 5 + 's';
+            particlesContainer.appendChild(p);
+        }
+
+        // --- Global Variables ---
+        let globalCsvData = "";
+        const WEB_APP_URL = "[!!! REPLACE_WITH_YOUR_DEPLOYED_WEB_APP_URL !!!]";
+
+        // --- UI Helpers ---
+        function showAlert(msg, isError = true) {
+            const alertBox = document.getElementById('alertBox');
+            const alertMsg = document.getElementById('alertMsg');
+            alertMsg.innerText = msg;
+            alertBox.classList.remove('hidden', 'bg-red-500', 'bg-green-500');
+            alertBox.classList.add(isError ? 'bg-red-500' : 'bg-green-500');
+            
+            if(!isError) {
+                // If it's a success link, allow HTML content
+                alertMsg.innerHTML = msg; 
+            }
+        }
+
+        function hideAlert() {
+            document.getElementById('alertBox').classList.add('hidden');
+        }
+
+        function toggleLoader(show, text = "מושך נתוני שוק...") {
+            const loader = document.getElementById('loader');
+            const btn = document.getElementById('loadBtn');
+            loader.querySelector('p').innerText = text;
+            if(show) {
+                loader.classList.remove('hidden');
+                btn.classList.add('opacity-50', 'cursor-not-allowed');
+                btn.disabled = true;
+            } else {
+                loader.classList.add('hidden');
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                btn.disabled = false;
+            }
+        }
+
+        // --- Main Logic ---
+        async function processData() {
+            hideAlert();
+            document.getElementById('previewContainer').classList.add('hidden');
+            
+            const tickersVal = document.getElementById('tickers').value.trim();
+            const startVal = document.getElementById('startDate').value;
+            const endVal = document.getElementById('endDate').value;
+            
+            // Validations
+            if (!tickersVal) {
+                return showAlert("אופס! נראה ששכחת להזין סימולי מניות.");
+            }
+            if (!startVal || !endVal) {
+                return showAlert("אופס! חובה לבחור תאריך התחלה ותאריך סיום.");
+            }
+            if (new Date(startVal) > new Date(endVal)) {
+                return showAlert("אופס! נראה שתאריך ההתחלה מאוחר מתאריך הסיום...");
+            }
+
+            // EXACT MANDATORY PAYLOAD CODE
+            const payload = {
+                tickers: document.getElementById('tickers').value,
+                startDate: document.getElementById('startDate').value,
+                endDate: document.getElementById('endDate').value,
+                frequency: document.getElementById('frequency').value,
+                action: 'csv'
+            };
+
+            toggleLoader(true);
+
+            try {
+                const response = await fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'text/plain;charset=utf-8'},
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                if (result.status === "error") {
+                    throw new Error(result.message || "שגיאה לא ידועה התרחשה בשרת.");
+                }
+
+                globalCsvData = result.csvData;
+                buildPreviewTable(globalCsvData);
+                document.getElementById('previewContainer').classList.remove('hidden');
+
+            } catch (error) {
+                showAlert("שגיאת תקשורת: " + error.message);
+            } finally {
+                toggleLoader(false);
+            }
+        }
+
+        function buildPreviewTable(csvString) {
+            const lines = csvString.split('\n').filter(line => line.trim() !== "");
+            const table = document.getElementById('previewTable');
+            table.innerHTML = "";
+
+            // Display up to 6 rows (Header + 5 Data rows)
+            const rowsToShow = lines.slice(0, 6);
+
+            rowsToShow.forEach((line, index) => {
+                const cols = line.split(',');
+                const tr = document.createElement('tr');
+                
+                cols.forEach(col => {
+                    const cell = document.createElement(index === 0 ? 'th' : 'td');
+                    cell.className = index === 0 
+                        ? 'p-3 font-bold text-slate-700 border-b border-white/50' 
+                        : 'p-3 border-b border-white/20 text-slate-600 font-medium';
+                    cell.innerText = col.trim();
+                    tr.appendChild(cell);
+                });
+                table.appendChild(tr);
+            });
+
+            if(lines.length > 6) {
+                const tr = document.createElement('tr');
+                const td = document.createElement('td');
+                td.colSpan = lines[0].split(',').length;
+                td.className = 'p-3 text-center text-slate-500 italic';
+                td.innerText = `... ועוד ${lines.length - 6} שורות זמינות לייצוא`;
+                tr.appendChild(td);
+                table.appendChild(tr);
+            }
+        }
+
+        // --- Export Functions ---
+        function downloadCSV() {
+            if (!globalCsvData) return;
+            const blob = new Blob(["\ufeff" + globalCsvData], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", "financial_data.csv");
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        async function exportToSheet() {
+            hideAlert();
+            toggleLoader(true, "מייצר גיליון Google Sheets חדש...");
+
+            const payload = {
+                tickers: document.getElementById('tickers').value,
+                startDate: document.getElementById('startDate').value,
+                endDate: document.getElementById('endDate').value,
+                frequency: document.getElementById('frequency').value,
+                action: 'sheet'
+            };
+
+            try {
+                const response = await fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'text/plain;charset=utf-8'},
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                if (result.status === "error") {
+                    throw new Error(result.message);
+                }
+
+                showAlert(`הצלחה! <a href="${result.sheetUrl}" target="_blank" class="underline font-bold">לחץ כאן לפתיחת הגיליון</a>`, false);
+
+            } catch (error) {
+                showAlert("שגיאה בייצוא לגיליון: " + error.message);
+            } finally {
+                toggleLoader(false);
+            }
+        }
+    </script>
+</body>
+</html>
